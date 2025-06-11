@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+# backend-path = ["."] # Usually not needed if setuptools is in requires
+
+[project]
+name = "configurable-gan-trainer"
+version = "0.1.0"
+description = "A configurable Generative Adversarial Network (GAN) trainer with a Tkinter GUI."
+readme = "README.md"
+requires-python = ">=3.8"
+license-files = ["LICENSE"] # Use this for the license
+authors = [
+    { name = "Bilal Azdad" },
+]
+keywords = ["gan", "pytorch", "tkinter", "machine-learning", "deep-learning"]
+
+dependencies = [
+    "torch>=2.0.0",
+    "torchvision>=0.15.0",
+    "matplotlib>=3.5.0",
+    "Pillow>=9.0.0",
+]
+
+[project.urls]
+"Homepage" = "https://github.com/yourusername/configurable-gan-trainer"
+"Bug Tracker" = "https://github.com/yourusername/configurable-gan-trainer/issues"
+
+[tool.setuptools]
+# Map the import package name "GAN" to the directory "GAN"
+package-dir = { "GAN" = "GAN" }
+packages = ["GAN"]
+
+# Alternative if the above doesn't work (less common for this simple structure):
+# find_namespace_packages = { where = ["."], include = ["GAN*"] }

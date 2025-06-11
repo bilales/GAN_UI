@@ -1,0 +1,68 @@
+{
+  "generator": {
+    "input_dim": 100,
+    "layers": [
+      { "type": "Dense", "units": 6272, "activation": "relu" },
+      { "type": "Reshape", "target_shape": [128, 7, 7] },
+      {
+        "type": "Conv2DTranspose",
+        "filters": 64,
+        "kernel_size": 4,
+        "stride": 2,
+        "padding": 1,
+        "activation": "relu"
+      },
+      {
+        "type": "Conv2DTranspose",
+        "filters": 1,
+        "kernel_size": 4,
+        "stride": 2,
+        "padding": 1,
+        "activation": "tanh"
+      }
+    ],
+    "output_size": 1,
+    "global_activation": "none"
+  },
+  "discriminator": {
+    "input_shape": [1, 28, 28],
+    "layers": [
+      {
+        "type": "Conv2D",
+        "filters": 64,
+        "kernel_size": 4,
+        "stride": 2,
+        "padding": 1,
+        "activation": "leakyrelu"
+      },
+      {
+        "type": "Conv2D",
+        "filters": 128,
+        "kernel_size": 4,
+        "stride": 2,
+        "padding": 1,
+        "activation": "leakyrelu"
+      },
+      { "type": "Flatten" },
+      { "type": "Dense", "units": 1 }
+    ],
+    "output_size": 1,
+    "global_activation": "none"
+  },
+  "training": {
+    "generator": {
+      "loss_function": "BCEWithLogitsLoss",
+      "learning_rate": 0.0002,
+      "epochs": 100,
+      "batch_size": 64
+    },
+    "discriminator": {
+      "loss_function": "BCEWithLogitsLoss",
+      "learning_rate": 0.0002,
+      "epochs": 100,
+      "batch_size": 64
+    },
+    "data_folder": "./data",
+    "initial_network": "generator"
+  }
+}
