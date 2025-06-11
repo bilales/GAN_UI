@@ -10,6 +10,7 @@ import torch
 import os
 import time # For timestamps in logger
 from torchvision import transforms # For image generation
+# Matplotlib imports will be handled inside the thread for plotting
 
 class GanConfigurator:
     def __init__(self, root_window):
@@ -20,18 +21,14 @@ class GanConfigurator:
         self.data_folder_var = tk.StringVar(value=os.path.abspath("./data"))
         self.loaded_config_data = None
         self.gan_controller = None
-        self.training_active = False # Manages if training process is ongoing
-        self.generated_image_pil_ref = None # For PhotoImage persistence
+        self.training_active = False 
+        self.generated_image_pil_ref = None 
 
         self.training_ui_callback = lambda message: self.root.after(0, self.update_training_stats_text, message)
 
-        # --- Main Layout ---
-        # Top frame for title and load button - moved load button into preview tab later
         header_frame = ttk.Frame(self.root)
         header_frame.pack(fill="x", padx=10, pady=(10,0))
         ttk.Label(header_frame, text="GAN Configurator & Trainer (Tkinter)", font=("Arial", 16, "bold")).pack(side="left")
-        # Load button will be added to the preview tab itself for better organization
-
 
         self.notebook = ttk.Notebook(self.root)
         self.notebook.pack(fill="both", expand=True, padx=10, pady=10)
@@ -40,9 +37,9 @@ class GanConfigurator:
         self.train_params_frame = ttk.Frame(self.notebook)
         self.summary_frame = ttk.Frame(self.notebook)
 
-        self.notebook.add(self.preview_frame, text="Network Architectures")
-        self.notebook.add(self.train_params_frame, text="Training Setup & Controls")
-        self.notebook.add(self.summary_frame, text="Output & Summary")
+        self.notebook.add(self.preview_frame, text="1. Network Architectures")
+        self.notebook.add(self.train_params_frame, text="2. Training Setup & Controls")
+        self.notebook.add(self.summary_frame, text="3. Output & Summary")
 
         self._build_preview_tab()
         self._build_training_params_tab()
@@ -51,7 +48,7 @@ class GanConfigurator:
         self.root.protocol("WM_DELETE_WINDOW", self.on_closing)
         self.update_training_stats_text(f"GPU Status: {detect_gpu()}")
         self.update_training_stats_text("Welcome! Please load a configuration file to begin.")
-        self.update_button_states() # Initialize button states correctly
+        self.update_button_states()
 
     def on_closing(self):
         if self.training_active: 
@@ -250,7 +247,7 @@ class GanConfigurator:
 
     def _create_param_entry_row(self, parent, label_text, string_var, is_combo=False, combo_values=None, entry_width=18):
         row_frame = ttk.Frame(parent)
-        row_frame.pack(fill="x", padx=5, pady=3) # Pack rows vertically
+        row_frame.pack(fill="x", padx=5, pady=3) 
         ttk.Label(row_frame, text=label_text, width=15, anchor="w").pack(side="left")
         if is_combo:
             widget = ttk.Combobox(row_frame, textvariable=string_var, values=combo_values or [], width=entry_width - 2, state="readonly")
@@ -264,7 +261,7 @@ class GanConfigurator:
             return
 
         training_conf = self.loaded_config_data["training"]
-        def safe_get(source_dict, key, default_var):
+        def safe_get(source_dict, key, default_var): # Helper to avoid errors if key missing
             return source_dict.get(key, default_var.get()) 
 
         gen_train = training_conf.get("generator", {})
@@ -310,7 +307,6 @@ class GanConfigurator:
 
     def select_data_folder(self):
         current_path = self.data_folder_var.get()
-        # Try to get directory from current_path, fallback to user's home if not a dir
         initial_dir = os.path.dirname(current_path) if os.path.isdir(current_path) else os.path.expanduser("~")
         if not os.path.exists(initial_dir) : initial_dir = os.path.expanduser("~")
 
@@ -325,7 +321,9 @@ class GanConfigurator:
 
         can_start = bool(self.loaded_config_data) and not self.training_active
         self.start_btn.config(state="normal" if can_start else "disabled")
-        self.load_config_button.config(state="normal" if not self.training_active else "disabled") # Disable load if training
+        # Also disable load config button if training is active
+        if hasattr(self, 'load_config_button'): # Check if it exists (it should)
+            self.load_config_button.config(state="normal" if not self.training_active else "disabled")
 
         if not self.training_active: 
             self.pause_btn.config(state="disabled")
@@ -377,7 +375,7 @@ class GanConfigurator:
                     self.update_training_stats_text("Ensuring previous threads are stopped before restart...")
                     self.gan_controller.signal_stop_training_threads()
                     self.gan_controller.join_training_threads(timeout=1) 
-                del self.gan_controller # Allow garbage collection for a full reset
+                del self.gan_controller
             
             self.gan_controller = GANController(
                 self.loaded_config_data.get("generator", {}),
@@ -400,17 +398,15 @@ class GanConfigurator:
             self.update_button_states()
 
     def _set_controls_during_action(self, disable=True):
-        """Helper to temporarily disable/re-enable relevant control buttons."""
-        # This ensures that only if training is truly active, these buttons are affected.
-        # Otherwise, update_button_states() will handle the overall state.
         if self.training_active: 
             action_button_state = "disabled" if disable else "normal"
+            # Avoid disabling stop button during quick actions
+            # self.stop_btn.config(state=action_button_state) # Usually keep stop enabled
             self.pause_btn.config(state=action_button_state)
             self.resume_btn.config(state=action_button_state)
             self.switch_btn.config(state=action_button_state)
-            # Stop button usually remains enabled. Start button handled by training_active.
         
-        if not disable: # When re-enabling after an action, refresh all button states
+        if not disable: 
             self.update_button_states()
 
 
@@ -419,11 +415,12 @@ class GanConfigurator:
             self.update_training_stats_text("Cannot pause: No active training session.")
             return
         
-        self._set_controls_during_action(True) # Disable buttons during action
+        # self._set_controls_during_action(True) # Can make UI feel sluggish for quick ops
         active_net_before_pause = self.gan_controller.trainer.current_network
-        self.gan_controller.pause_training()
+        self.gan_controller.pause_training() 
         self.update_training_stats_text(f"Paused {active_net_before_pause} training.")
-        self._set_controls_during_action(False) # Re-evaluate button states
+        # self._set_controls_during_action(False)
+        self.update_button_states() # Directly update
 
 
     def resume_active_training(self):
@@ -431,29 +428,32 @@ class GanConfigurator:
             self.update_training_stats_text("Cannot resume: No active training session.")
             return
 
-        self._set_controls_during_action(True)
+        # self._set_controls_during_action(True)
         current_ui_train_config = self.get_current_ui_training_config()
         if not current_ui_train_config: 
-            self._set_controls_during_action(False)
+            # self._set_controls_during_action(False)
+            self.update_button_states() # Ensure states are correct if input error
             return
         self.gan_controller.update_runtime_train_params_from_ui(current_ui_train_config)
             
         active_net_to_resume = self.gan_controller.trainer.current_network
         self.gan_controller.resume_training()
         self.update_training_stats_text(f"Resumed {active_net_to_resume} training.")
-        self._set_controls_during_action(False)
+        # self._set_controls_during_action(False)
+        self.update_button_states()
     
     def switch_active_network(self):
         if not self.training_active or not self.gan_controller:
             self.update_training_stats_text("Cannot switch: No active training session.")
             return
         
-        self._set_controls_during_action(True)
+        # self._set_controls_during_action(True)
         old_active = self.gan_controller.trainer.current_network
         self.gan_controller.switch_network()
         new_active = self.gan_controller.trainer.current_network
         self.update_training_stats_text(f"Switched. Was: {old_active}, Now active: {new_active}.")
-        self._set_controls_during_action(False)
+        # self._set_controls_during_action(False)
+        self.update_button_states()
     
     def stop_all_training(self):
         if not self.training_active or not self.gan_controller:
@@ -463,39 +463,40 @@ class GanConfigurator:
 
         self.update_training_stats_text("Signaling training threads to stop...")
         self.stop_btn.config(text="Stopping...", state="disabled")
-        self._set_controls_during_action(True) # Disable other controls
+        # Temporarily disable other controls
+        self.pause_btn.config(state="disabled")
+        self.resume_btn.config(state="disabled")
+        self.switch_btn.config(state="disabled")
+        self.start_btn.config(state="disabled") # Start should be disabled anyway
+        self.load_config_button.config(state="disabled")
         self.root.update_idletasks()
 
         self.gan_controller.signal_stop_training_threads()
         
-        def _check_threads_stopped_after_signal():
+        def _check_threads_stopped_after_signal(attempts_left=10): # Poll for 5 seconds (10 * 0.5s)
             if self.gan_controller and \
                ((self.gan_controller.generator_thread is None or not self.gan_controller.generator_thread.is_alive()) and \
                 (self.gan_controller.discriminator_thread is None or not self.gan_controller.discriminator_thread.is_alive())):
                 
                 self.update_training_stats_text("Training threads have terminated.")
                 self.training_active = False
-                # Controller instance is kept for potential post-training actions like image generation or plotting
-                # It will be cleaned up if Start is pressed again or on app close.
-            else: # Threads might still be running or cleaning up
-                self.update_training_stats_text("Waiting for threads to confirm stop...")
-                # If threads are daemon, they will exit with app. This is a UI feedback poll.
-                # self.root.after(500, _check_threads_stopped_after_signal) # Recursive poll
-                # For simplicity, we assume signal_stop is enough and rely on daemon threads
-                # or on_closing for final join.
-                self.training_active = False # Set flag, UI will reflect this
-                self.update_training_stats_text("Stop signal sent. Threads will terminate shortly.")
+                # self.gan_controller = None # Keep controller for post-training actions
+            elif attempts_left > 0 :
+                self.update_training_stats_text(f"Waiting for threads to confirm stop... ({attempts_left})")
+                self.root.after(500, lambda: _check_threads_stopped_after_signal(attempts_left - 1))
+                return # Don't update buttons yet
+            else: # Timeout
+                self.update_training_stats_text("Threads did not confirm stop in time. Assuming stopped for UI.")
+                self.training_active = False
+            
+            # This block runs if threads stopped or timeout reached
+            self.update_button_states() # Re-evaluates all button states
+            self.stop_btn.config(text="Stop All Training") # Reset text
+            # Load config should be enabled now that training_active is false
+            self.load_config_button.config(state="normal")
 
 
-        self.root.after(200, _check_threads_stopped_after_signal) # Start polling after a brief delay
-        # Update UI immediately to reflect intent to stop
-        # The actual self.training_active = False will be set by the poller for more accuracy
-        # For now, let the poller handle setting training_active = False
-        self.update_button_states() # This will disable most controls as training_active might still be True
-        self.stop_btn.config(text="Stop All Training") # Reset text after a delay perhaps, or by poller
-        # For immediate UI change reflecting the stop action:
-        # self.training_active = False # This would disable stop button immediately
-        # self.update_button_states()
+        self.root.after(100, lambda: _check_threads_stopped_after_signal()) # Start polling
 
 
     def update_training_stats_text(self, message):
@@ -563,16 +564,15 @@ class GanConfigurator:
         thread.start()
 
     def _plot_losses_thread_task(self):
+        plot_filepath = "training_losses.png" 
         try:
-            # Ensure matplotlib is imported in the thread if there are backend issues
-            # import matplotlib
-            # matplotlib.use('Agg') # Example: Use a non-interactive backend for thread safety if needed
+            import matplotlib
+            matplotlib.use('Agg') 
             import matplotlib.pyplot as plt
 
             trainer_instance = self.gan_controller.get_trainer_instance()
-            if trainer_instance: 
-                # Create a new figure for each plot to avoid state issues with plt.show()
-                fig = plt.figure(figsize=(10, 5)) # Create figure object
+            if trainer_instance and (trainer_instance.gen_losses or trainer_instance.disc_losses):
+                fig = plt.figure(figsize=(10, 5)) 
                 if trainer_instance.gen_losses:
                     plt.plot(trainer_instance.gen_losses, label="Generator Loss")
                 if trainer_instance.disc_losses:
@@ -582,10 +582,17 @@ class GanConfigurator:
                 plt.title("Training Losses")
                 plt.legend()
                 plt.grid(True)
-                plt.show() # This will block this thread until plot window is closed
+                
+                plt.savefig(plot_filepath, bbox_inches='tight')
+                plt.close(fig) 
+                
+                self.root.after(0, lambda: messagebox.showinfo("Plot Saved", f"Loss plot saved to:\n{os.path.abspath(plot_filepath)}"))
+                self.root.after(0, lambda: self.update_training_stats_text(f"Loss plot saved to {plot_filepath}"))
+            else:
+                self.root.after(0, lambda: messagebox.showinfo("Plot Info", "No loss data available to plot."))
+                
         except Exception as e:
-            # Use root.after to schedule messagebox on main thread
-            self.root.after(0, lambda: messagebox.showerror("Plotting Error", f"Failed to display plot: {e}"))
+            self.root.after(0, lambda: messagebox.showerror("Plotting Error", f"Failed to generate plot: {e}"))
             print(f"Plotting error details:", exc_info=True)
         finally:
             if hasattr(self, 'plot_losses_button') and self.plot_losses_button.winfo_exists():
@@ -631,5 +638,4 @@ class GanConfigurator:
 if __name__ == "__main__":
     main_root = tk.Tk()
     app = GanConfigurator(main_root)
-    # update_button_states is called at the end of __init__
     main_root.mainloop()
