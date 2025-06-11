@@ -27,3 +27,5 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.swp
+
+configurable_gan_trainer.egg-info
