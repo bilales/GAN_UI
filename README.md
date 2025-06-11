@@ -15,20 +15,26 @@ This project allows users to:
 ## Project Structure
 
 GAN_Project_Root/
-├── GAN/ # Main Python package for the GAN application
-│ ├── init.py
-│ ├── main.py # Tkinter GUI and main application logic
-│ ├── controller.py # Orchestrates model building and training
-│ ├── model_builder.py # Dynamically builds PyTorch models from config
-│ ├── train_manager.py # Handles the GAN training loops and logic
-│ ├── data_loader.py # Loads data (e.g., MNIST)
-│ └── config.json # Example JSON configuration for network architecture & training
-├── .venv/ # Virtual environment (managed by uv or venv)
-├── data/ # Default directory for datasets (e.g., MNIST)
-├── pyproject.toml # Project metadata and build configuration
-├── requirements.txt # Project dependencies
-├── README.md # This file
-└── LICENSE # Project license
+├── .git/
+├── .venv/
+├── GAN/
+│ ├── **init**.py
+│ ├── main.py
+│ ├── controller.py
+│ ├── model_builder.py
+│ ├── train_manager.py
+│ ├── data_loader.py
+│ └── config.json
+├── data/
+│ └── MNIST/
+│ └── raw/
+│ └── ...
+├── .gitignore
+├── pyproject.toml
+├── requirements.txt
+├── README.md
+├── LICENSE
+└── uv.lock
 
 ## Prerequisites
 
