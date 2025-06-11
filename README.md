@@ -14,6 +14,7 @@ This project allows users to:
 
 ## Project Structure
 
+```
 GAN_Project_Root/
 ├── .git/
 ├── .venv/
@@ -35,6 +36,7 @@ GAN_Project_Root/
 ├── README.md
 ├── LICENSE
 └── uv.lock
+```
 
 ## Prerequisites
 
