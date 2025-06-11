@@ -7,6 +7,7 @@ dist/
 build/
 *.so
 *.pyd
+configurable_gan_trainer.egg-info
 
 # Virtual environment
 .venv/
@@ -27,5 +28,3 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.swp
-
-configurable_gan_trainer.egg-info
