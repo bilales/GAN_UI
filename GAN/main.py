@@ -40,9 +40,9 @@ class GanConfigurator:
         self.train_params_frame = ttk.Frame(self.notebook)
         self.summary_frame = ttk.Frame(self.notebook)
 
-        self.notebook.add(self.preview_frame, text="1. Network Architectures")
-        self.notebook.add(self.train_params_frame, text="2. Training Setup & Controls")
-        self.notebook.add(self.summary_frame, text="3. Output & Summary")
+        self.notebook.add(self.preview_frame, text="Network Architectures")
+        self.notebook.add(self.train_params_frame, text="Training Setup & Controls")
+        self.notebook.add(self.summary_frame, text="Output & Summary")
 
         self._build_preview_tab()
         self._build_training_params_tab()
