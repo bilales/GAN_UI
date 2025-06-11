@@ -525,8 +525,14 @@ class GanConfigurator:
         generation_lf.pack(pady=10, fill="x", padx=10)
         self.generate_image_button = ttk.Button(generation_lf, text="Generate & Show Image", command=self.generate_and_show_image)
         self.generate_image_button.pack(pady=5)
-        self.generated_image_label = ttk.Label(generation_lf, text="No image generated yet.", compound="image", relief="sunken", borderwidth=1, minwidth=130, minheight=130) # Anchor image
-        self.generated_image_label.pack(pady=5)
+        self.image_display_frame = ttk.Frame(generation_lf, width=130, height=130, relief="sunken", borderwidth=1)
+        self.image_display_frame.pack(pady=5)
+        # Prevent the frame from shrinking to the label's initial size (text only)
+        self.image_display_frame.pack_propagate(False) 
+
+        self.generated_image_label = ttk.Label(self.image_display_frame, text="No image generated yet.", compound="image", anchor="center")
+        # Pack the label to expand within the frame
+        self.generated_image_label.pack(fill="both", expand=True) 
 
     def update_summary_text_from_config(self):
         if not self.loaded_config_data:
