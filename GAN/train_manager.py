@@ -242,7 +242,7 @@ class Trainer:
 
         self.disc_optimizer.zero_grad()
 
-        real_labels = torch.ones(real_batch.size(0), 1, device=self.device)
+        real_labels = torch.ones(real_batch.size(0), 0.9, device=self.device)
         output_real = self.discriminator(real_batch)
         loss_real = self.disc_loss_fn(output_real, real_labels)
         
